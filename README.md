@@ -1,6 +1,28 @@
 # Homework_Django_22.1_Forms
 # Это продолжение Homeworks_Django_21.2 FBV и CBV
 
+# Рекомендации от Наставника:
+Касательно доп. задания ты практически правильно поняла, надо переопределять формсет, примерно так:
+
+
+
+class VersionFormSet(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+
+        active_versions = [form.cleaned_data for form in self.forms if form.cleaned_data.get('is_current')
+                           and not form.cleaned_data.get('DELETE', False)]
+
+        if len(active_versions) > 1:
+            raise forms.ValidationError('Может быть активна только одна версия продукта.')
+
+        if self.has_changed():
+            if len(active_versions) == 1:
+                active_versions = active_versions[0]
+                Version.objects.filter(product_id=self.instance.id, is_current=True).update(is_current=False)
+
+        return active_versions
+
 * Задание 1
 Продолжаем работать с проектом из предыдущего домашнего задания. Для модели продуктов реализуйте механизм CRUD, задействовав модуль 
 django.forms.
